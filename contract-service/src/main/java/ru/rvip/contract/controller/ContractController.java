@@ -25,9 +25,9 @@ import ru.rvip.contract.dto.ChangeManagerRequest;
 import ru.rvip.contract.dto.ContractReportResponse;
 import ru.rvip.contract.dto.ContractResponse;
 import ru.rvip.contract.dto.CreateContractRequest;
-import ru.rvip.contract.dto.ErrorResponse;
+import ru.rvip.common.entity.ContractStatus;
+import ru.rvip.common.error.ErrorResponse;
 import ru.rvip.contract.dto.UpdateContractRequest;
-import ru.rvip.contract.entity.ContractStatus;
 import ru.rvip.contract.service.ContractService;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package ru.rvip.contract.dto;
+package ru.rvip.common.error;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,8 +24,7 @@ public record ErrorResponse(
         @Schema(description = "Путь запроса", example = "/api/contracts")
         String path,
 
-        @Schema(description = "Ошибки по полям. Есть только у ответа 400 на валидацию",
-                example = "{\"counterpartyInn\":\"ИНН должен содержать 10 или 12 цифр\"}")
+        @Schema(description = "Ошибки по полям. Есть только у ответа 400 на валидацию")
         Map<String, String> fields
 ) {
 }

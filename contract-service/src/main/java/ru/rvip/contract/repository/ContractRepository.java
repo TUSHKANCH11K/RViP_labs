@@ -1,8 +1,8 @@
 package ru.rvip.contract.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import ru.rvip.contract.entity.Contract;
-import ru.rvip.contract.entity.ContractStatus;
+import ru.rvip.common.entity.Contract;
+import ru.rvip.common.entity.ContractStatus;
 
 import java.util.List;
 

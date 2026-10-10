@@ -10,8 +10,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import ru.rvip.contract.dto.ErrorResponse;
-import ru.rvip.contract.entity.ContractStatus;
+import ru.rvip.common.entity.ContractStatus;
+import ru.rvip.common.error.ErrorResponse;
 
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;

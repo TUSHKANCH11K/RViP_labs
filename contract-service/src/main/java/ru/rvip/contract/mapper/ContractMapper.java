@@ -4,8 +4,8 @@ import org.springframework.stereotype.Component;
 import ru.rvip.contract.dto.ContractResponse;
 import ru.rvip.contract.dto.CreateContractRequest;
 import ru.rvip.contract.dto.UpdateContractRequest;
-import ru.rvip.contract.entity.Contract;
-import ru.rvip.contract.entity.ContractStatus;
+import ru.rvip.common.entity.Contract;
+import ru.rvip.common.entity.ContractStatus;
 
 import java.time.LocalDate;
 

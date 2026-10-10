@@ -1,4 +1,4 @@
-package ru.rvip.contract.entity;
+package ru.rvip.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

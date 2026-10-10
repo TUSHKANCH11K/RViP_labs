@@ -1,0 +1,3 @@
+app:
+  contract-service-url: ${CONTRACT_SERVICE_URL:http://contract-service:8081}
+  report-service-url: ${REPORT_SERVICE_URL:http://report-service:8082}

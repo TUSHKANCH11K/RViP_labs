@@ -1,7 +1,7 @@
 package ru.rvip.contract.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import ru.rvip.contract.entity.ContractStatus;
+import ru.rvip.common.entity.ContractStatus;
 
 import java.time.LocalDate;
 

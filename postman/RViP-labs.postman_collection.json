@@ -1,0 +1,528 @@
+{
+  "info": {
+    "name": "RViP labs",
+    "description": "Сквозной сценарий через шлюз: создать договор, увидеть его в отчете, сменить менеджера, закрыть, увидеть CLOSED, сверить summary, проверить ошибки и удалить.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "contractId",
+      "value": ""
+    },
+    {
+      "key": "contractNumber",
+      "value": ""
+    },
+    {
+      "key": "openedAt",
+      "value": "2026-10-10"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Health",
+      "item": [
+        {
+          "name": "GET /api/health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('шлюз и сервисы доступны', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('UP');",
+                  "    pm.expect(body.gateway).to.eql('UP');",
+                  "    pm.expect(body.contractService.status).to.eql('UP');",
+                  "    pm.expect(body.reportService.status).to.eql('UP');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Contracts",
+      "item": [
+        {
+          "name": "POST /api/contracts",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const stamp = Date.now().toString();",
+                  "pm.collectionVariables.set('contractNumber', 'DG-PM-' + stamp.slice(-10));",
+                  "pm.collectionVariables.set('openedAt', new Date().toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('договор создан', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.id).to.be.a('number');",
+                  "    pm.expect(body.status).to.eql('ACTIVE');",
+                  "    pm.expect(body.contractNumber).to.eql(pm.collectionVariables.get('contractNumber'));",
+                  "    pm.expect(body.closedAt).to.eql(null);",
+                  "    pm.collectionVariables.set('contractId', String(body.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contractNumber\": \"{{contractNumber}}\",\n  \"counterpartyName\": \"ООО Поле\",\n  \"counterpartyInn\": \"7701234567\",\n  \"counterpartyContact\": \"+7-495-111-22-33\",\n  \"managerName\": \"Иванова Анна\"\n}"
+            },
+            "url": "{{baseUrl}}/api/contracts"
+          }
+        },
+        {
+          "name": "GET /api/contracts",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/contracts"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('список договоров', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "    const id = Number(pm.collectionVariables.get('contractId'));",
+                  "    pm.expect(body.some(function (item) { return item.id === id; })).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/contracts/{id}",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/contracts/{{contractId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('договор по id', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.id).to.eql(Number(pm.collectionVariables.get('contractId')));",
+                  "    pm.expect(body).to.have.property('contractNumber');",
+                  "    pm.expect(body).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /api/contracts/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contractNumber\": \"{{contractNumber}}\",\n  \"counterpartyName\": \"ООО Поле\",\n  \"counterpartyInn\": \"7701234567\",\n  \"counterpartyContact\": \"pole@example.com\",\n  \"managerName\": \"Иванова Анна\",\n  \"openedAt\": \"{{openedAt}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/contracts/{{contractId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('договор обновлен', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.counterpartyContact).to.eql('pole@example.com');",
+                  "    pm.expect(body.status).to.eql('ACTIVE');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Reports",
+      "item": [
+        {
+          "name": "GET /api/reports/contracts",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reports/contracts"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('созданный договор есть в отчете', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.items).to.be.an('array');",
+                  "    pm.expect(body).to.have.property('total');",
+                  "    pm.expect(body.page).to.eql(0);",
+                  "    pm.expect(body.limit).to.eql(20);",
+                  "    const id = Number(pm.collectionVariables.get('contractId'));",
+                  "    pm.expect(body.items.some(function (item) { return item.id === id; })).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/reports/contracts?status=ACTIVE",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reports/contracts?status=ACTIVE"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('только действующие', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.items.every(function (item) { return item.status === 'ACTIVE'; })).to.eql(true);",
+                  "    pm.expect(body.total).to.be.at.least(body.items.length);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/reports/contracts page and limit",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reports/contracts?page=0&limit=1"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('пагинация', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.page).to.eql(0);",
+                  "    pm.expect(body.limit).to.eql(1);",
+                  "    pm.expect(body.items.length).to.be.at.most(1);",
+                  "    pm.expect(body.total).to.be.at.least(1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Manager and close",
+      "item": [
+        {
+          "name": "PATCH /api/contracts/{id}/manager",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"managerName\": \"Смирнов Олег\"\n}"
+            },
+            "url": "{{baseUrl}}/api/contracts/{{contractId}}/manager"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('менеджер назначен', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().managerName).to.eql('Смирнов Олег');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/contracts/{id}/close",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/contracts/{{contractId}}/close"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('договор закрыт', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('CLOSED');",
+                  "    pm.expect(body.closedAt).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/contracts/report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/contracts/report"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('отчет contract-service', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('active');",
+                  "    pm.expect(body).to.have.property('closed');",
+                  "    pm.expect(body).to.have.property('total');",
+                  "    pm.expect(body.active + body.closed).to.eql(body.total);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 Closed report",
+      "item": [
+        {
+          "name": "GET /api/reports/contracts?status=CLOSED",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reports/contracts?status=CLOSED&limit=100"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('закрытый договор виден в отчете', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    const id = Number(pm.collectionVariables.get('contractId'));",
+                  "    const found = body.items.find(function (item) { return item.id === id; });",
+                  "    pm.expect(found).to.be.an('object');",
+                  "    pm.expect(found.status).to.eql('CLOSED');",
+                  "    pm.expect(found.managerName).to.eql('Смирнов Олег');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/reports/contracts/summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reports/contracts/summary"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('сводка сходится', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.active).to.be.a('number');",
+                  "    pm.expect(body.closed).to.be.a('number');",
+                  "    pm.expect(body.total).to.eql(body.active + body.closed);",
+                  "    pm.expect(body.closed).to.be.at.least(1);",
+                  "    pm.expect(body.active).to.be.at.least(1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 Negative",
+      "item": [
+        {
+          "name": "POST invalid INN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contractNumber\": \"DG-BAD-INN\",\n  \"counterpartyName\": \"ООО Поле\",\n  \"counterpartyInn\": \"12345\",\n  \"managerName\": \"Иванова Анна\"\n}"
+            },
+            "url": "{{baseUrl}}/api/contracts"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('невалидный ИНН', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "    pm.expect(body).to.have.property('error');",
+                  "    pm.expect(body).to.have.property('message');",
+                  "    pm.expect(body).to.have.property('path');",
+                  "    pm.expect(body.fields).to.have.property('counterpartyInn');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET missing id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/contracts/999999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('договор не найден', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body.path).to.eql('/api/contracts/999999');",
+                  "    pm.expect(body.message).to.include('не найден');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH close again",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/contracts/{{contractId}}/close"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('повторное закрытие', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(409);",
+                  "    pm.expect(body.message).to.include('закрыт');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "    pm.expect(body).to.have.property('path');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 Cleanup",
+      "item": [
+        {
+          "name": "DELETE /api/contracts/{id}",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/contracts/{{contractId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('договор удален', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "    pm.expect(pm.response.text()).to.eql('');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

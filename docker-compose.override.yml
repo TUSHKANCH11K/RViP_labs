@@ -1,0 +1,9 @@
+# Подключается автоматически к docker compose up и открывает сервисы для отладки.
+# Чтобы наружу был виден только шлюз, запускайте: docker compose -f docker-compose.yml up --build
+services:
+  contract-service:
+    ports:
+      - "8081:8081"
+  report-service:
+    ports:
+      - "8082:8082"
