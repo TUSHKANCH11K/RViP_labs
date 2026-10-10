@@ -1,0 +1,27 @@
+# Явный SQL, потому что createTable в Liquibase 4.31 превращает BIGSERIAL в IDENTITY.
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-contracts-table
+      author: rvip
+      logicalFilePath: db/changelog/changes/001-create-contracts-table.yaml
+      changes:
+        - sql:
+            splitStatements: false
+            sql: >
+              CREATE TABLE contracts (
+                  id BIGSERIAL NOT NULL,
+                  contract_number VARCHAR(50) NOT NULL,
+                  counterparty_name VARCHAR(255) NOT NULL,
+                  counterparty_inn VARCHAR(12) NOT NULL,
+                  counterparty_contact VARCHAR(255),
+                  manager_name VARCHAR(255) NOT NULL,
+                  status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+                  opened_at DATE NOT NULL,
+                  closed_at DATE,
+                  CONSTRAINT pk_contracts PRIMARY KEY (id),
+                  CONSTRAINT uk_contracts_contract_number UNIQUE (contract_number),
+                  CONSTRAINT chk_contracts_status CHECK (status IN ('ACTIVE', 'CLOSED'))
+              )
+      rollback:
+        - sql:
+            sql: DROP TABLE IF EXISTS contracts

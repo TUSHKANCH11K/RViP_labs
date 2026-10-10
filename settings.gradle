@@ -1,0 +1,3 @@
+rootProject.name = 'rvip-labs'
+
+include 'contract-service'

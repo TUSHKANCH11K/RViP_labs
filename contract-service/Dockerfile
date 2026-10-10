@@ -1,0 +1,16 @@
+FROM gradle:8-jdk17 AS build
+WORKDIR /workspace
+COPY gradle gradle
+COPY gradlew settings.gradle build.gradle gradle.properties ./
+COPY contract-service contract-service
+USER root
+RUN chmod +x gradlew && ./gradlew :contract-service:bootJar -x test --no-daemon
+
+FROM eclipse-temurin:17-jre
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=build /workspace/contract-service/build/libs/contract-service.jar /app/app.jar
+EXPOSE 8081
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

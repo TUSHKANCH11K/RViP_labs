@@ -1,0 +1,133 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-insert-test-contracts
+      author: rvip
+      logicalFilePath: db/changelog/changes/002-insert-test-contracts.yaml
+      changes:
+        - insert:
+            tableName: contracts
+            columns:
+              - column:
+                  name: contract_number
+                  value: "ДГ-2024-001"
+              - column:
+                  name: counterparty_name
+                  value: "ООО «Ромашка»"
+              - column:
+                  name: counterparty_inn
+                  value: "7707083893"
+              - column:
+                  name: counterparty_contact
+                  value: "+7-495-000-00-01"
+              - column:
+                  name: manager_name
+                  value: "Иванова Анна"
+              - column:
+                  name: status
+                  value: "ACTIVE"
+              - column:
+                  name: opened_at
+                  valueDate: "2024-02-01"
+        - insert:
+            tableName: contracts
+            columns:
+              - column:
+                  name: contract_number
+                  value: "ДГ-2024-014"
+              - column:
+                  name: counterparty_name
+                  value: "ИП Петров П.П."
+              - column:
+                  name: counterparty_inn
+                  value: "503212345678"
+              - column:
+                  name: counterparty_contact
+                  value: "petrov@example.com"
+              - column:
+                  name: manager_name
+                  value: "Смирнов Олег"
+              - column:
+                  name: status
+                  value: "ACTIVE"
+              - column:
+                  name: opened_at
+                  valueDate: "2024-06-15"
+        - insert:
+            tableName: contracts
+            columns:
+              - column:
+                  name: contract_number
+                  value: "ДГ-2023-088"
+              - column:
+                  name: counterparty_name
+                  value: "АО «Вектор»"
+              - column:
+                  name: counterparty_inn
+                  value: "7812345678"
+              - column:
+                  name: manager_name
+                  value: "Кузнецова Мария"
+              - column:
+                  name: status
+                  value: "CLOSED"
+              - column:
+                  name: opened_at
+                  valueDate: "2023-04-10"
+              - column:
+                  name: closed_at
+                  valueDate: "2025-12-01"
+        - insert:
+            tableName: contracts
+            columns:
+              - column:
+                  name: contract_number
+                  value: "ДГ-2025-003"
+              - column:
+                  name: counterparty_name
+                  value: "ООО «Север»"
+              - column:
+                  name: counterparty_inn
+                  value: "5401123456"
+              - column:
+                  name: counterparty_contact
+                  value: "+7-383-200-00-03"
+              - column:
+                  name: manager_name
+                  value: "Орлов Игорь"
+              - column:
+                  name: status
+                  value: "CLOSED"
+              - column:
+                  name: opened_at
+                  valueDate: "2025-01-20"
+              - column:
+                  name: closed_at
+                  valueDate: "2026-03-15"
+        - insert:
+            tableName: contracts
+            columns:
+              - column:
+                  name: contract_number
+                  value: "ДГ-2026-007"
+              - column:
+                  name: counterparty_name
+                  value: "ООО «Ласточка»"
+              - column:
+                  name: counterparty_inn
+                  value: "6670123456"
+              - column:
+                  name: counterparty_contact
+                  value: "lastochka@example.com"
+              - column:
+                  name: manager_name
+                  value: "Иванова Анна"
+              - column:
+                  name: status
+                  value: "ACTIVE"
+              - column:
+                  name: opened_at
+                  valueDate: "2026-09-01"
+      rollback:
+        - delete:
+            tableName: contracts
+            where: "contract_number IN ('ДГ-2024-001', 'ДГ-2024-014', 'ДГ-2023-088', 'ДГ-2025-003', 'ДГ-2026-007')"
