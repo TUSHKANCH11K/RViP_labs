@@ -2,13 +2,19 @@ package ru.rvip.contract.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.rvip.contract.dto.ChangeManagerRequest;
 import ru.rvip.contract.dto.ContractReportResponse;
 import ru.rvip.contract.dto.ContractResponse;
+import ru.rvip.contract.dto.ContractSearchPageResponse;
 import ru.rvip.contract.dto.CreateContractRequest;
 import ru.rvip.contract.dto.UpdateContractRequest;
+import ru.rvip.contract.exception.InvalidSearchException;
+import ru.rvip.contract.repository.ContractSpecifications;
 import ru.rvip.common.entity.Contract;
 import ru.rvip.common.entity.ContractStatus;
 import ru.rvip.contract.exception.ConflictException;
@@ -17,7 +23,9 @@ import ru.rvip.contract.mapper.ContractMapper;
 import ru.rvip.contract.repository.ContractRepository;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -89,6 +97,39 @@ public class ContractService {
         contract.setManagerName(request.managerName());
         log.info("Назначен менеджер договора id={} manager={}", id, request.managerName());
         return contractMapper.toResponse(contract);
+    }
+
+    @Transactional(readOnly = true)
+    public ContractSearchPageResponse search(ContractStatus status,
+                                              String managerName,
+                                              LocalDate openedFrom,
+                                              LocalDate openedTo,
+                                              int page,
+                                              int limit) {
+        Map<String, String> fields = new LinkedHashMap<>();
+        if (page < 0) {
+            fields.put("page", "page не может быть отрицательным");
+        }
+        if (limit < 1) {
+            fields.put("limit", "limit должен быть не меньше 1");
+        } else if (limit > 100) {
+            fields.put("limit", "limit не больше 100");
+        }
+        if (!fields.isEmpty()) {
+            throw new InvalidSearchException(fields);
+        }
+        Page<Contract> result = contractRepository.findAll(
+                ContractSpecifications.byFilter(status, managerName, openedFrom, openedTo),
+                PageRequest.of(page, limit, Sort.by(Sort.Order.desc("openedAt"), Sort.Order.desc("id")))
+        );
+        log.info("Поиск договоров: status={}, manager={}, from={}, to={}, page={}, limit={}, total={}",
+                status, managerName, openedFrom, openedTo, page, limit, result.getTotalElements());
+        return new ContractSearchPageResponse(
+                result.getContent().stream().map(contractMapper::toResponse).toList(),
+                result.getTotalElements(),
+                page,
+                limit
+        );
     }
 
     @Transactional(readOnly = true)

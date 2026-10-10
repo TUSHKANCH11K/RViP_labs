@@ -1,5 +1,6 @@
-package ru.rvip.report.repository;
+package ru.rvip.contract.repository;
 
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import ru.rvip.common.entity.Contract;
 import ru.rvip.common.entity.ContractStatus;
@@ -19,7 +20,7 @@ public final class ContractSpecifications {
                                                     LocalDate openedFrom,
                                                     LocalDate openedTo) {
         return (root, query, builder) -> {
-            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+            List<Predicate> predicates = new ArrayList<>();
             if (status != null) {
                 predicates.add(builder.equal(root.get("status"), status));
             }
@@ -38,7 +39,7 @@ public final class ContractSpecifications {
             if (predicates.isEmpty()) {
                 return builder.conjunction();
             }
-            return builder.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
+            return builder.and(predicates.toArray(Predicate[]::new));
         };
     }
 }

@@ -1,26 +1,22 @@
 package ru.rvip.report.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import ru.rvip.common.entity.Contract;
-import ru.rvip.common.entity.ContractStatus;
+import ru.rvip.report.client.ContractItem;
+import ru.rvip.report.client.ContractPage;
+import ru.rvip.report.client.ContractsClient;
 import ru.rvip.report.dto.ReportPageResponse;
+import ru.rvip.report.dto.ReportStatus;
 import ru.rvip.report.dto.ReportSummaryResponse;
 import ru.rvip.report.mapper.ReportMapper;
-import ru.rvip.report.repository.ContractReadRepository;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,49 +24,39 @@ import static org.mockito.Mockito.when;
 class ReportServiceTest {
 
     @Mock
-    private ContractReadRepository contractReadRepository;
+    private ContractsClient contractsClient;
 
+    @Mock
+    private ReportMapper reportMapper;
+
+    @InjectMocks
     private ReportService reportService;
 
-    @BeforeEach
-    void setUp() {
-        reportService = new ReportService(contractReadRepository, new ReportMapper());
-    }
-
     @Test
-    void findContractsSortsByOpenedAtDescendingAndMapsPage() {
-        Contract contract = new Contract();
-        contract.setId(5L);
-        contract.setContractNumber("ДГ-2026-007");
-        contract.setCounterpartyName("ООО «Ласточка»");
-        contract.setCounterpartyInn("6670123456");
-        contract.setManagerName("Иванова Анна");
-        contract.setStatus(ContractStatus.ACTIVE);
-        contract.setOpenedAt(LocalDate.of(2026, 9, 1));
-        when(contractReadRepository.findAll(any(Specification.class), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(contract), Pageable.ofSize(20), 1));
+    void findContractsMapsPageFromContractService() {
+        LocalDate today = LocalDate.now();
+        ContractItem item = new ContractItem(1L, "ДГ-1", "ООО", "7707083893", null,
+                "Иванова", ReportStatus.ACTIVE, today, null);
+        when(contractsClient.fetchContracts(ReportStatus.ACTIVE, "Иванова", null, null, 0, 20))
+                .thenReturn(new ContractPage(List.of(item), 1, 0, 20));
+        when(reportMapper.toItem(item, today)).thenReturn(new ru.rvip.report.dto.ReportItem(
+                1L, "ДГ-1", "ООО", "7707083893", null, "Иванова", ReportStatus.ACTIVE, today, null, 0));
 
-        ReportPageResponse page = reportService.findContracts(ContractStatus.ACTIVE, null, null, null, 0, 20);
+        ReportPageResponse page = reportService.findContracts(ReportStatus.ACTIVE, "Иванова", null, null, 0, 20);
 
-        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-        verify(contractReadRepository).findAll(any(Specification.class), pageable.capture());
-        assertEquals("openedAt: DESC", pageable.getValue().getSort().getOrderFor("openedAt").toString());
-        assertEquals(1, page.items().size());
-        assertEquals(5L, page.items().get(0).id());
         assertEquals(1, page.total());
-        assertEquals(0, page.page());
-        assertEquals(20, page.limit());
+        assertEquals(0, page.items().get(0).durationDays());
+        verify(contractsClient).fetchContracts(ReportStatus.ACTIVE, "Иванова", null, null, 0, 20);
     }
 
     @Test
-    void summaryUsesStatusCounts() {
-        when(contractReadRepository.countByStatus(ContractStatus.ACTIVE)).thenReturn(3L);
-        when(contractReadRepository.countByStatus(ContractStatus.CLOSED)).thenReturn(2L);
+    void summaryComesFromContractService() {
+        when(contractsClient.fetchSummary()).thenReturn(new ReportSummaryResponse(3, 2, 5));
 
         ReportSummaryResponse summary = reportService.summary();
 
-        assertEquals(3L, summary.active());
-        assertEquals(2L, summary.closed());
-        assertEquals(5L, summary.total());
+        assertEquals(3, summary.active());
+        assertEquals(2, summary.closed());
+        assertEquals(5, summary.total());
     }
 }

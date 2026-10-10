@@ -13,6 +13,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import ru.rvip.common.entity.ContractStatus;
 import ru.rvip.common.error.ErrorResponse;
 
+import java.time.LocalDate;
+
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -57,12 +59,23 @@ public class GlobalExceptionHandler {
         return response(HttpStatus.BAD_REQUEST, "Ошибка валидации входных данных", request, fields);
     }
 
+    @ExceptionHandler(InvalidSearchException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidSearch(InvalidSearchException exception, HttpServletRequest request) {
+        log.warn("Ошибка поиска {}: {}", request.getRequestURI(), exception.getFields());
+        return response(HttpStatus.BAD_REQUEST, exception.getMessage(), request, exception.getFields());
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException exception,
                                                              HttpServletRequest request) {
-        String message = exception.getRequiredType() == ContractStatus.class
-                ? "Статус должен быть ACTIVE или CLOSED"
-                : "Некорректное значение параметра " + exception.getName();
+        String message;
+        if (exception.getRequiredType() == ContractStatus.class) {
+            message = "Статус должен быть ACTIVE или CLOSED";
+        } else if (exception.getRequiredType() == LocalDate.class) {
+            message = "Дата " + exception.getName() + " должна быть в формате YYYY-MM-DD";
+        } else {
+            message = "Некорректное значение параметра " + exception.getName();
+        }
         log.warn("Некорректный параметр {}: {}", exception.getName(), exception.getValue());
         return response(HttpStatus.BAD_REQUEST, message, request, null);
     }

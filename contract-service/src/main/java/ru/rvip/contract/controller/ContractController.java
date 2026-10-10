@@ -1,5 +1,6 @@
 package ru.rvip.contract.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,12 +26,14 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.rvip.contract.dto.ChangeManagerRequest;
 import ru.rvip.contract.dto.ContractReportResponse;
 import ru.rvip.contract.dto.ContractResponse;
+import ru.rvip.contract.dto.ContractSearchPageResponse;
 import ru.rvip.contract.dto.CreateContractRequest;
 import ru.rvip.common.entity.ContractStatus;
 import ru.rvip.common.error.ErrorResponse;
 import ru.rvip.contract.dto.UpdateContractRequest;
 import ru.rvip.contract.service.ContractService;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -74,6 +78,18 @@ public class ContractController {
     @ApiResponse(responseCode = "200", description = "Сводка по статусам")
     public ContractReportResponse report() {
         return contractService.report();
+    }
+
+    @Hidden
+    @GetMapping("/search")
+    public ContractSearchPageResponse search(
+            @RequestParam(required = false) ContractStatus status,
+            @RequestParam(required = false) String managerName,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate openedFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate openedTo,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int limit) {
+        return contractService.search(status, managerName, openedFrom, openedTo, page, limit);
     }
 
     @GetMapping("/{id}")

@@ -523,6 +523,222 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Lab 3",
+      "item": [
+        {
+          "name": "POST /api/contracts",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const stamp = Date.now().toString();",
+                  "pm.collectionVariables.set('lab3Number', 'DG-L3-' + stamp.slice(-10));",
+                  "pm.collectionVariables.set('lab3OpenedAt', new Date().toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('договор для отчета создан', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('lab3Id', String(body.id));",
+                  "    pm.expect(body.contractNumber).to.eql(pm.collectionVariables.get('lab3Number'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/contracts",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contractNumber\": \"{{lab3Number}}\",\n  \"counterpartyName\": \"ООО Отчет\",\n  \"counterpartyInn\": \"7701234567\",\n  \"counterpartyContact\": \"+7-495-300-00-03\",\n  \"managerName\": \"Смирнова Ольга\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET /api/reports/contracts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('новый договор есть в отчете и у строки есть durationDays', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    const item = body.items.find(row => row.contractNumber === pm.collectionVariables.get('lab3Number'));",
+                  "    pm.expect(item, 'договор в отчете').to.be.an('object');",
+                  "    pm.expect(item.durationDays).to.be.a('number');",
+                  "    pm.expect(item.managerName).to.eql('Смирнова Ольга');",
+                  "    pm.expect(item.status).to.eql('ACTIVE');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reports/contracts?limit=100"
+          }
+        },
+        {
+          "name": "PATCH /api/contracts/{id}/close",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('договор закрыт', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().status).to.eql('CLOSED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/contracts/{{lab3Id}}/close"
+          }
+        },
+        {
+          "name": "GET /api/reports/contracts?status=CLOSED",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('закрытый договор виден в отчете', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    const item = body.items.find(row => row.contractNumber === pm.collectionVariables.get('lab3Number'));",
+                  "    pm.expect(item, 'закрытый договор').to.be.an('object');",
+                  "    pm.expect(item.status).to.eql('CLOSED');",
+                  "    pm.expect(item.durationDays).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reports/contracts?status=CLOSED&limit=100"
+          }
+        },
+        {
+          "name": "GET /api/contracts/report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('сводка сервиса договоров сохранена', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('lab3Active', String(body.active));",
+                  "    pm.collectionVariables.set('lab3Closed', String(body.closed));",
+                  "    pm.collectionVariables.set('lab3Total', String(body.total));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/contracts/report"
+          }
+        },
+        {
+          "name": "GET /api/reports/contracts/summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('сводка отчета совпадает с отчетом договоров', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(String(body.active)).to.eql(pm.collectionVariables.get('lab3Active'));",
+                  "    pm.expect(String(body.closed)).to.eql(pm.collectionVariables.get('lab3Closed'));",
+                  "    pm.expect(String(body.total)).to.eql(pm.collectionVariables.get('lab3Total'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reports/contracts/summary"
+          }
+        },
+        {
+          "name": "GET /api/contracts/search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('внутренний поиск закрыт шлюзом', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/contracts/search"
+          }
+        },
+        {
+          "name": "DELETE /api/contracts/{id}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('тестовый договор удален', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/contracts/{{lab3Id}}"
+          }
+        }
+      ]
     }
   ]
 }

@@ -1,12 +1,13 @@
 package ru.rvip.contract.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import ru.rvip.common.entity.Contract;
 import ru.rvip.common.entity.ContractStatus;
 
 import java.util.List;
 
-public interface ContractRepository extends JpaRepository<Contract, Long> {
+public interface ContractRepository extends JpaRepository<Contract, Long>, JpaSpecificationExecutor<Contract> {
 
     List<Contract> findAllByOrderByIdAsc();
 

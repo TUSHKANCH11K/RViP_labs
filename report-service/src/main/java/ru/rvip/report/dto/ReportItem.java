@@ -1,12 +1,11 @@
 package ru.rvip.report.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import ru.rvip.common.entity.ContractStatus;
 
 import java.time.LocalDate;
 
 @Schema(description = "Строка отчета по договору")
-public record ReportContractResponse(
+public record ReportItem(
         @Schema(example = "1")
         Long id,
         @Schema(example = "ДГ-2024-001")
@@ -20,10 +19,12 @@ public record ReportContractResponse(
         @Schema(example = "Иванова Анна")
         String managerName,
         @Schema(example = "ACTIVE")
-        ContractStatus status,
+        ReportStatus status,
         @Schema(example = "2024-02-01")
         LocalDate openedAt,
         @Schema(example = "2025-12-01", nullable = true)
-        LocalDate closedAt
+        LocalDate closedAt,
+        @Schema(description = "Дней между открытием и закрытием. Для действующего договора — до сегодня", example = "9")
+        long durationDays
 ) {
 }

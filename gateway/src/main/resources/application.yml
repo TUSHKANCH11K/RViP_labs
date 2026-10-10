@@ -42,8 +42,6 @@ springdoc:
         url: /v3/api-docs
       - name: contract-service
         url: /api/contracts/v3/api-docs
-      - name: report-service
-        url: /api/reports/v3/api-docs
 
 logging:
   level:

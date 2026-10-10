@@ -7,7 +7,7 @@ import java.util.List;
 @Schema(description = "Страница отчета по договорам")
 public record ReportPageResponse(
         @Schema(description = "Строки текущей страницы")
-        List<ReportContractResponse> items,
+        List<ReportItem> items,
         @Schema(description = "Всего строк с учетом фильтра", example = "5")
         long total,
         @Schema(description = "Номер страницы, с нуля", example = "0")

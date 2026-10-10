@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.rvip.common.entity.ContractStatus;
 import ru.rvip.common.error.ErrorResponse;
 import ru.rvip.report.dto.ReportPageResponse;
+import ru.rvip.report.dto.ReportStatus;
 import ru.rvip.report.dto.ReportSummaryResponse;
 import ru.rvip.report.service.ReportService;
 
@@ -28,22 +28,24 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/reports")
 @RequiredArgsConstructor
-@Tag(name = "Отчеты", description = "Чтение договоров для отчетов")
+@Tag(name = "Отчеты", description = "Отчет по договорам. Данные запрашиваются у сервиса договоров")
 public class ReportController {
 
     private final ReportService reportService;
 
     @GetMapping("/contracts")
     @Operation(summary = "Список договоров для отчета",
-            description = "Фильтры необязательны. Сортировка по дате открытия по убыванию. page по умолчанию 0, limit по умолчанию 20.")
+            description = "Фильтры необязательны. Сортировка по дате открытия по убыванию. page по умолчанию 0, limit по умолчанию 20. У каждой строки есть durationDays.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Страница отчета"),
             @ApiResponse(responseCode = "400", description = "Некорректные параметры",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "503", description = "Сервис договоров недоступен",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ReportPageResponse contracts(
             @Parameter(description = "Статус договора", example = "ACTIVE")
-            @RequestParam(required = false) ContractStatus status,
+            @RequestParam(required = false) ReportStatus status,
             @Parameter(description = "Ответственный менеджер, без учета регистра", example = "Иванова Анна")
             @RequestParam(required = false) String managerName,
             @Parameter(description = "Дата открытия от, включительно", example = "2024-01-01")
@@ -60,9 +62,12 @@ public class ReportController {
     }
 
     @GetMapping("/contracts/summary")
-    @Operation(summary = "Сводка по договорам",
-            description = "Считает действующие и закрытые договоры отдельными COUNT-запросами.")
-    @ApiResponse(responseCode = "200", description = "Сводка")
+    @Operation(summary = "Сводка по договорам")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Сводка"),
+            @ApiResponse(responseCode = "503", description = "Сервис договоров недоступен",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ReportSummaryResponse summary() {
         return reportService.summary();
     }

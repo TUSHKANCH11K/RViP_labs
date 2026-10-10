@@ -1,5 +1,2 @@
-spring:
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:contracts}
-    username: ${DB_USER:contracts}
-    password: ${DB_PASSWORD:contracts}
+contract-service:
+  url: ${CONTRACT_SERVICE_URL:http://localhost:8081}
